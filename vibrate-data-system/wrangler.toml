@@ -1,8 +1,16 @@
+
 name = "vibrate-data-system"
 compatibility_date = "2024-01-01"
 pages_build_output_dir = "dist"
+
+[env.production]
+vars = { ENVIRONMENT = "production" }
+
+[env.development]
+vars = { ENVIRONMENT = "development" }
 
 
 binding = "DB"
 database_name = "vibrate-data"
 database_id = "86a19b62-441d-46fd-a900-344b55c3a07b"
+migrations_dir = "database/migrations"

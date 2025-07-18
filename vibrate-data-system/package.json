@@ -1,0 +1,24 @@
+{
+  "name": "vibrate-data-system",
+  "version": "2.2.0",
+  "description": "سیستم ثبت داده‌های ویبره تجهیزات",
+  "main": "dist/index.html",
+  "scripts": {
+    "dev": "wrangler pages dev dist --d1 DB=vibrate-data",
+    "deploy": "wrangler pages deploy dist",
+    "build": "npm run copy-files",
+    "copy-files": "mkdir -p dist && cp src/* dist/ 2>/dev/null || true",
+    "db:create": "wrangler d1 create vibrate-data",
+    "db:migrate": "wrangler d1 execute vibrate-data --file=database/schema.sql",
+    "db:migrate:local": "wrangler d1 execute vibrate-data --local --file=database/schema.sql"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  },
+  "keywords": ["vibration", "data", "cloudflare", "pages", "d1"],
+  "author": "OMID",
+  "license": "MIT"
+}

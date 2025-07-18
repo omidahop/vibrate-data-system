@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سیستم ثبت داده‌های ویبره تجهیزات</title>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Dexie.js -->
+    <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
+    
+    <!-- PapaParse for CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    سیستم ثبت داده‌های ویبره
+                </div>
+                
+                <nav class="nav-tabs">
+                    <button class="nav-tab active" onclick="showSection('data-entry')">
+                        <i class="fas fa-edit"></i>
+                        ثبت داده
+                    </button>
+                    <button class="nav-tab" onclick="showSection('view-data')">
+                        <i class="fas fa-table"></i>
+                        مشاهده داده‌ها
+                    </button>
+                    <button class="nav-tab" onclick="showSection('charts')">
+                        <i class="fas fa-chart-area"></i>
+                        نمودار
+                    </button>
+                    <button class="nav-tab" onclick="showSection('analysis')">
+                        <i class="fas fa-search"></i>
+                        آنالیز
+                    </button>
+                    <button class="nav-tab" onclick="showSection('slideshow')">
+                        <i class="fas fa-play"></i>
+                        اسلایدشو
+                    </button>
+                    <button class="nav-tab" onclick="showSection('database')">
+                        <i class="fas fa-database"></i>
+                        دیتابیس
+                    </button>
+                    <button class="nav-tab" onclick="showSection('settings')">
+                        <i class="fas fa-cog"></i>
+                        تنظیمات
+                    </button>
+                </nav>
+                
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Data Entry Section -->
+            <section id="data-entry" class="section active">
+                <!-- User Info -->
+                <div class="card">
+                    <div class="user-info d-flex align-center">
+                        <div class="user-avatar" id="userAvatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="user-details">
+                            <div class="user-name" id="userName">کاربر میهمان</div>
+                            <div class="user-role">اپراتور تجهیزات</div>
+                        </div>
+                        <!-- In the data entry user info card -->
+<div class="d-flex gap-2">
+   <!--  <button class="btn btn-error btn-sm" onclick="clearAllCache()">
+        <i class="fas fa-trash-alt"></i>
+        پاک کردن کامل کش
+    </button>
+    <button class="btn btn-warning btn-sm" onclick="clearDateSpecificCache()">
+        <i class="fas fa-broom"></i>
+        پاک کردن کش روزهای قبل
+    </button> -->
+    <button class="btn btn-primary btn-sm" onclick="showUserModal()">
+        <i class="fas fa-edit"></i>
+        ویرایش
+    </button>
+</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-edit"></i>
+                            ثبت داده‌های ویبره
+                        </h2>
+                    </div>
+                    
+                    <!-- Tab Buttons -->
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" id="newEntryTab" onclick="switchDataEntryMode('new')">
+                            <i class="fas fa-plus"></i>
+                            ثبت جدید
+                        </button>
+                        <button class="tab-btn" id="editEntryTab" onclick="switchDataEntryMode('edit')">
+                            <i class="fas fa-edit"></i>
+                            ویرایش
+                        </button>
+                    </div>
+                    
+                    <!-- New Entry Mode -->
+                    <div id="newEntryMode">
+                        <!-- Date Selection for New Entry -->
+                        <div class="form-group">
+                            <label class="form-label">انتخاب تاریخ:</label>
+                            <div class="d-flex gap-2 align-center">
+                                <input type="date" class="form-control" id="entryDateInput">
+                                <small class="text-secondary">تاریخ مورد نظر برای ثبت داده را انتخاب کنید</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Unit Selection -->
+                        <div class="form-group">
+                            <label class="form-label">انتخاب واحد:</label>
+                            <div class="grid grid-2">
+                                <button class="unit-btn dri1" onclick="selectUnit('DRI1')">
+                                    <i class="fas fa-industry"></i>
+                                    واحد احیا مستقیم 1 (DRI 1)
+                                </button>
+                                <button class="unit-btn dri2" onclick="selectUnit('DRI2')">
+                                    <i class="fas fa-industry"></i>
+                                    واحد احیا مستقیم 2 (DRI 2)
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Data Entry Header -->
+                        <div class="data-entry-header d-none" id="entryHeader">
+                            <div class="current-unit" id="currentUnit">واحد احیا مستقیم 1</div>
+                            <div class="current-date" id="currentDate">تاریخ انتخابی</div>
+                            <div class="current-equipment" id="currentEquipment">
+                                <i class="fas fa-cog"></i>
+                                گیربکس کمپرسور 48A
+                            </div>
+                            <div class="current-parameter" id="currentParameter">
+                                <i class="fas fa-arrow-up"></i>
+                                سرعت عمودی متصل (V1)
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Data Input Area -->
+                        <div class="data-input-area d-none" id="inputArea">
+                            <input type="number" class="form-control large" id="dataInput" 
+                                   placeholder="مقدار را وارد کنید..." 
+                                   min="0" max="20" step="0.01">
+                            <div class="mt-2">
+                                <small class="text-secondary">حداکثر مقدار: 20 | Enter برای ثبت</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Controls -->
+                        <div class="d-flex gap-2 justify-center mt-3 d-none" id="newEntryControls">
+                            <button class="btn btn-success" onclick="saveCurrentData()">
+                                <i class="fas fa-save"></i>
+                                ذخیره
+                            </button>
+                            <button class="btn btn-warning" onclick="resetEntry()">
+                                <i class="fas fa-refresh"></i>
+                                شروع مجدد
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Edit Mode -->
+                    <div id="editMode" class="d-none">
+                        <!-- Date Selection for Edit -->
+                        <div class="form-group">
+                            <label class="form-label">انتخاب تاریخ:</label>
+                            <div class="d-flex gap-2 align-center">
+                                <input type="date" class="form-control" id="editDateInput">
+                                <small class="text-secondary">تاریخ موردنظر برای ویرایش را انتخاب کنید</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Unit Selection for Edit -->
+                        <div class="form-group">
+                            <label class="form-label">انتخاب واحد:</label>
+                            <div class="grid grid-2">
+                                <button class="unit-btn dri1" onclick="selectEditUnit('DRI1')">
+                                    <i class="fas fa-industry"></i>
+                                    واحد احیا مستقیم 1 (DRI 1)
+                                </button>
+                                <button class="unit-btn dri2" onclick="selectEditUnit('DRI2')">
+                                    <i class="fas fa-industry"></i>
+                                    واحد احیا مستقیم 2 (DRI 2)
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Equipment Selection for Edit -->
+                        <div class="form-group d-none" id="editEquipmentSection">
+                            <label class="form-label">انتخاب تجهیز:</label>
+                            <div class="grid grid-3" id="editEquipmentGrid">
+                                <!-- Equipment cards will be populated by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <!-- Parameter Selection for Edit -->
+                        <div class="form-group d-none" id="editParameterSection">
+                            <label class="form-label">انتخاب پارامتر:</label>
+                            <div class="grid grid-4" id="editParameterGrid">
+                                <!-- Parameter cards will be populated by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <!-- Edit Input Area -->
+                        <div class="data-input-area d-none" id="editInputArea">
+                            <div class="mb-2">
+                                <strong>مقدار فعلی: <span id="currentValue">--</span></strong>
+                            </div>
+                            <input type="number" class="form-control large" id="editDataInput" 
+                                   placeholder="مقدار جدید را وارد کنید..." 
+                                   min="0" max="20" step="0.01">
+                            <div class="mt-2">
+                                <small class="text-secondary">حداکثر مقدار: 20</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Edit Controls -->
+                        <div class="d-flex gap-2 justify-center mt-3 d-none" id="editControls">
+                            <button class="btn btn-success" onclick="saveEditedData()">
+                                <i class="fas fa-save"></i>
+                                ذخیره تغییرات
+                            </button>
+                            <button class="btn btn-secondary" onclick="cancelEdit()">
+                                <i class="fas fa-times"></i>
+                                انصراف
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- View Data Section -->
+            <section id="view-data" class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-table"></i>
+                            مشاهده داده‌ها
+                        </h2>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary" onclick="toggleFullscreen('view-data')">
+                                <i class="fas fa-expand"></i>
+                                تمام صفحه
+                            </button>
+                            <button class="btn btn-secondary" onclick="printTable()">
+                                <i class="fas fa-print"></i>
+                                چاپ
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Current User Info -->
+                    <div class="current-user-info">
+                        <div class="d-flex align-center gap-2 mb-3">
+                            <i class="fas fa-user text-primary"></i>
+                            <span>کاربر فعلی: <strong id="currentUserDisplay">کاربر میهمان</strong></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Filters -->
+                    <div class="grid grid-3 mb-3">
+                        <div class="form-group">
+                            <label class="form-label">واحد:</label>
+                            <select class="form-control" id="viewUnit">
+                                <option value="">همه واحدها</option>
+                                <option value="DRI1">DRI 1</option>
+                                <option value="DRI2">DRI 2</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">تاریخ:</label>
+                            <input type="date" class="form-control" id="viewDate">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">تجهیز:</label>
+                            <select class="form-control" id="viewEquipment">
+                                <option value="">همه تجهیزات</option>
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Data Tables -->
+                    <div id="dataTablesContainer">
+                        <!-- Tables will be populated by JavaScript -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts Section -->
+            <section id="charts" class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-chart-area"></i>
+                            نمودارها
+                        </h2>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary" onclick="toggleFullscreen('charts')">
+                                <i class="fas fa-expand"></i>
+                                تمام صفحه
+                            </button>
+                            <button class="btn btn-secondary" onclick="printChart()">
+                                <i class="fas fa-print"></i>
+                                چاپ نمودار
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Current User Info -->
+                    <div class="current-user-info">
+                        <div class="d-flex align-center gap-2 mb-3">
+                            <i class="fas fa-user text-primary"></i>
+                            <span>کاربر فعلی: <strong id="currentUserDisplayCharts">کاربر میهمان</strong></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Chart Filters -->
+                    <div class="grid grid-4 mb-3">
+                        <div class="form-group">
+                            <label class="form-label">واحد:</label>
+                            <select class="form-control" id="chartUnit">
+                                <option value="DRI1">DRI 1</option>
+                                <option value="DRI2">DRI 2</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">تجهیز:</label>
+                            <select class="form-control" id="chartEquipment">
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">از تاریخ:</label>
+                            <input type="date" class="form-control" id="chartDateFrom">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">تا تاریخ:</label>
+                            <input type="date" class="form-control" id="chartDateTo">
+                        </div>
+                    </div>
+                    
+                    <!-- Parameter Selection -->
+                    <div class="form-group">
+                        <label class="form-label">انتخاب پارامترها:</label>
+                        <div class="grid grid-4" id="chartParameters">
+                            <!-- Parameter checkboxes will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <!-- Chart Container -->
+                    <div class="chart-container" id="chartContainerMain">
+                        <canvas id="mainChart" class="chart-canvas"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analysis Section -->
+            <section id="analysis" class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-search"></i>
+                            آنالیز افزایش‌های غیرعادی
+                        </h2>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary" onclick="toggleFullscreen('analysis')">
+                                <i class="fas fa-expand"></i>
+                                تمام صفحه
+                            </button>
+                            <button class="btn btn-success" onclick="refreshAnalysis()">
+                                <i class="fas fa-sync"></i>
+                                به‌روزرسانی
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Current User Info -->
+                    <div class="current-user-info">
+                        <div class="d-flex align-center gap-2 mb-3">
+                            <i class="fas fa-user text-primary"></i>
+                            <span>کاربر فعلی: <strong id="currentUserDisplayAnalysis">کاربر میهمان</strong></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Analysis Info -->
+                    <div class="analysis-info">
+                        <div class="d-flex gap-3 align-center text-center">
+                            <div>
+                                <i class="fas fa-percentage text-warning"></i>
+                                <span>حد آستانه: <strong id="thresholdDisplay">20%</strong></span>
+                            </div>
+                            <div>
+                                <i class="fas fa-calendar text-info"></i>
+                                <span>بازه بررسی: <strong id="timeRangeDisplay">7 روز</strong></span>
+                            </div>
+                            <div>
+                                <i class="fas fa-clock text-secondary"></i>
+                                <span>مقایسه با: <strong id="comparisonDisplay">1 روز قبل</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Analysis Cards Container -->
+                    <div class="analysis-cards-container" id="analysisCardsContainer">
+                        <!-- Analysis cards will be populated by JavaScript -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slideshow Section -->
+            <section id="slideshow" class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-play"></i>
+                            اسلایدشو داده‌ها
+                        </h2>
+                        <button class="btn btn-primary" onclick="toggleSlideshowFullscreen()">
+                            <i class="fas fa-expand"></i>
+                            تمام صفحه
+                        </button>
+                    </div>
+                    
+                    <!-- Slideshow Settings -->
+                    <div class="grid grid-2 mb-3">
+                        <div class="form-group">
+                            <label class="form-label">تاریخ:</label>
+                            <input type="date" class="form-control" id="slideshowDate">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">سرعت (ثانیه):</label>
+                            <input type="number" class="form-control" id="slideshowSpeed" 
+                                   min="1" max="10" value="3">
+                        </div>
+                    </div>
+                    
+                    <!-- Slideshow Display -->
+                    <div class="slideshow-container">
+                        <div class="slideshow-display">
+                            <div class="slideshow-equipment" id="slideshowEquipmentName">
+                                اسلایدشو را شروع کنید
+                            </div>
+                            <div class="slideshow-parameter" id="slideshowParameterName">
+                                تاریخ را انتخاب کنید
+                            </div>
+                            <div class="slideshow-value" id="slideshowValue">--</div>
+                        </div>
+                        
+                        <div class="slideshow-controls">
+                            <button class="btn btn-success" onclick="startSlideshow()">
+                                <i class="fas fa-play"></i>
+                                شروع
+                            </button>
+                            <button class="btn btn-warning" onclick="pauseSlideshow()">
+                                <i class="fas fa-pause"></i>
+                                توقف
+                            </button>
+                            <button class="btn btn-primary" onclick="resumeSlideshow()">
+                                <i class="fas fa-play"></i>
+                                ادامه
+                            </button>
+                            <button class="btn btn-error" onclick="stopSlideshow()">
+                                <i class="fas fa-stop"></i>
+                                پایان
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Database Section -->
+            <section id="database" class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-database"></i>
+                            مدیریت دیتابیس
+                        </h2>
+                        <button class="btn btn-warning" onclick="clearPreviousDaysCache()">
+                            <i class="fas fa-trash"></i>
+                            پاک کردن کش روزهای قبل
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-2">
+                        <!-- Export -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-download"></i>
+                                    خروجی گرفتن
+                                </h3>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary" onclick="exportData('csv')">
+                                    <i class="fas fa-file-csv"></i>
+                                    خروجی CSV
+                                </button>
+                                <button class="btn btn-secondary" onclick="exportSettings()">
+                                    <i class="fas fa-cog"></i>
+                                    خروجی تنظیمات
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Import -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-upload"></i>
+                                    وارد کردن
+                                </h3>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">فایل CSV:</label>
+                                <input type="file" class="form-control" id="importFile" 
+                                       accept=".csv">
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-success" onclick="importData()">
+                                    <i class="fas fa-upload"></i>
+                                    وارد کردن داده‌ها
+                                </button>
+                                <button class="btn btn-warning" onclick="importSettings()">
+                                    <i class="fas fa-cog"></i>
+                                    وارد کردن تنظیمات
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Database Merge -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-merge"></i>
+                                ادغام دیتابیس
+                            </h3>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">فایل دیتابیس قبلی:</label>
+                            <input type="file" class="form-control" id="mergeFile" 
+                                   accept=".csv">
+                        </div>
+                        <button class="btn btn-primary" onclick="mergeDatabase()">
+                            <i class="fas fa-merge"></i>
+                            ادغام با دیتابیس جاری
+                        </button>
+                    </div>
+					<!-- In the database section -->
+<div class="card mt-3">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-exclamation-triangle"></i>
+            بازنشانی کامل سیستم
+        </h3>
+    </div>
+    <div class="text-center p-3">
+        <p class="text-warning mb-3">
+            <strong>هشدار:</strong> این عمل تمام داده‌ها، تنظیمات و کش را پاک می‌کند و قابل بازگشت نیست!
+        </p>
+        <button class="btn btn-error btn-lg" onclick="resetApplicationCompletely()">
+            <i class="fas fa-bomb"></i>
+            بازنشانی کامل سیستم
+        </button>
+    </div>
+</div>
+                    
+                    <!-- Database Stats -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-chart-pie"></i>
+                                آمار دیتابیس
+                            </h3>
+                        </div>
+                        <div class="grid grid-2 grid-md-5">
+                            <div class="text-center">
+                                <div class="card-title">تعداد روزها</div>
+                                <div class="slideshow-value" id="totalDays">0</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="card-title">تعداد رکوردها</div>
+                                <div class="slideshow-value" id="totalRecords">0</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="card-title">حجم دیتابیس</div>
+                                <div class="slideshow-value" id="dbSize">0 KB</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="card-title">آخرین بروزرسانی</div>
+                                <div class="slideshow-value" id="lastUpdate">--</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="card-title">آخرین کاربر</div>
+                                <div class="slideshow-value" id="lastUser">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-cog"></i>
+                            تنظیمات
+                        </h2>
+                    </div>
+                    
+                    <div class="grid grid-2">
+                        <!-- Theme Settings -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-palette"></i>
+                                    تنظیمات ظاهری
+                                </h3>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">تم:</label>
+                                <select class="form-control" id="themeSelect">
+                                    <option value="light">روشن</option>
+                                    <option value="dark">تیره</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">رنگ اصلی:</label>
+                                <input type="color" class="form-control" id="primaryColor" 
+                                       value="#2563eb">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">رنگ DRI 1:</label>
+                                <input type="color" class="form-control" id="dri1Color" 
+                                       value="#3b82f6">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">رنگ DRI 2:</label>
+                                <input type="color" class="form-control" id="dri2Color" 
+                                       value="#ef4444">
+                            </div>
+                        </div>
+                        
+                        <!-- Analysis Settings -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-search"></i>
+                                    تنظیمات آنالیز
+                                </h3>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">حد آستانه افزایش (درصد):</label>
+                                <input type="number" class="form-control" id="analysisThreshold" 
+                                       min="1" max="100" value="20">
+                                <small class="text-secondary">حداقل درصد افزایش برای نمایش هشدار</small>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">بازه زمانی بررسی (روز):</label>
+                                <input type="number" class="form-control" id="analysisTimeRange" 
+                                       min="1" max="30" value="7">
+                                <small class="text-secondary">چند روز گذشته بررسی شود</small>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">تعداد روزهای مقایسه:</label>
+                                <input type="number" class="form-control" id="analysisComparisonDays" 
+                                       min="1" max="10" value="1">
+                                <small class="text-secondary">با چند روز قبل مقایسه شود</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Priority Settings Info -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-info-circle"></i>
+                                راهنمای اولویت‌بندی
+                            </h3>
+                        </div>
+                        <div class="priority-info">
+                            <p><strong>توجه:</strong> اولویت‌بندی تجهیزات و پارامترها فقط در قسمت اسلایدشو استفاده می‌شود.</p>
+                            <ul>
+                                <li>اولویت تجهیزات: شماره 1 تا 24 (12 تجهیز × 2 واحد)</li>
+                                <li>اولویت پارامترها: شماره 1 تا 12</li>
+                                <li>امکان انتخاب حالت اولویت پارامترها</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Equipment Priority -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-sort-numeric-down"></i>
+                                اولویت تجهیزات - 24 تجهیز (فقط برای اسلایدشو)
+                            </h3>
+                        </div>
+                        <div class="priority-grid" id="equipmentPriority">
+                            <!-- Equipment priority items will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <!-- Parameter Priority -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-list-ol"></i>
+                                اولویت پارامترها (فقط برای اسلایدشو)
+                            </h3>
+                        </div>
+                        
+                        <!-- Parameter Mode Selector -->
+                        <div class="parameter-mode-selector">
+                            <label class="form-label">حالت اولویت‌بندی:</label>
+                            <div class="mode-options">
+                                <div class="mode-option selected" onclick="setParameterMode('velocity-first')">
+                                    <input type="radio" name="parameterMode" value="velocity-first" checked>
+                                    <span>ابتدا سرعت، سپس شتاب</span>
+                                </div>
+                                <div class="mode-option" onclick="setParameterMode('custom')">
+                                    <input type="radio" name="parameterMode" value="custom">
+                                    <span>اولویت دلخواه</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="priority-grid" id="parameterPriority">
+                            <!-- Parameter priority items will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <!-- Save Settings -->
+                    <div class="text-center mt-3">
+                        <button class="btn btn-success btn-lg" onclick="saveSettings()">
+                            <i class="fas fa-save"></i>
+                            ذخیره تنظیمات
+                        </button>
+                        <button class="btn btn-warning btn-lg" onclick="resetSettings()">
+                            <i class="fas fa-refresh"></i>
+                            بازنشانی
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- User Modal -->
+    <div class="modal" id="userModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">مدیریت کاربر</h3>
+                <button class="modal-close" onclick="closeModal('userModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">نام کاربری:</label>
+                    <input type="text" class="form-control" id="userNameInput" placeholder="نام خود را وارد کنید">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">سمت:</label>
+                    <select class="form-control" id="userRole">
+                        <option value="اپراتور تجهیزات">اپراتور تجهیزات</option>
+                        <option value="تکنسین">تکنسین</option>
+                        <option value="مهندس">مهندس</option>
+                        <option value="سرپرست">سرپرست</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" onclick="saveUser()">
+                    <i class="fas fa-save"></i>
+                    ذخیره
+                </button>
+                <button class="btn btn-secondary" onclick="closeModal('userModal')">
+                    <i class="fas fa-times"></i>
+                    انصراف
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for confirmations -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">تایید</h3>
+                <button class="modal-close" onclick="closeModal('confirmModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage">آیا مطمئن هستید؟</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" onclick="confirmAction()">
+                    <i class="fas fa-check"></i>
+                    بله
+                </button>
+                <button class="btn btn-error" onclick="closeModal('confirmModal')">
+                    <i class="fas fa-times"></i>
+                    خیر
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for slideshow equipment confirmation -->
+    <div class="modal" id="slideshowModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">تجهیز بعدی</h3>
+            </div>
+            <div class="modal-body">
+                <p id="slideshowMessage">آیا به تجهیز بعدی بروم؟</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" onclick="confirmNextEquipment()">
+                    <i class="fas fa-check"></i>
+                    بله
+                </button>
+                <button class="btn btn-error" onclick="stopSlideshow()">
+                    <i class="fas fa-stop"></i>
+                    خیر
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slideshow Fullscreen -->
+    <div class="slideshow-fullscreen d-none" id="slideshowFullscreen">
+        <button class="slideshow-fullscreen-close" onclick="exitSlideshowFullscreen()">
+            <i class="fas fa-times"></i>
+            خروج از تمام صفحه
+        </button>
+        
+        <!-- Slideshow Fullscreen Modal -->
+        <div class="slideshow-fullscreen-modal d-none" id="slideshowFullscreenModal">
+            <div class="slideshow-fullscreen-modal-content">
+                <h3>تجهیز بعدی</h3>
+                <p id="slideshowFullscreenMessage">آیا به تجهیز بعدی بروم؟</p>
+                <div class="d-flex gap-3 justify-center mt-3">
+                    <button class="btn btn-success btn-lg" onclick="confirmNextEquipmentFullscreen()">
+                        <i class="fas fa-check"></i>
+                        بله
+                    </button>
+                    <button class="btn btn-error btn-lg" onclick="stopSlideshowFromFullscreen()">
+                        <i class="fas fa-stop"></i>
+                        خیر
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="slideshow-fullscreen-content">
+            <div class="slideshow-equipment" id="slideshowEquipmentNameFS">
+                اسلایدشو را شروع کنید
+            </div>
+            <div class="slideshow-parameter" id="slideshowParameterNameFS">
+                تاریخ را انتخاب کنید
+            </div>
+            <div class="slideshow-value" id="slideshowValueFS">--</div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
