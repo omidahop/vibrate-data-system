@@ -12,5 +12,5 @@ vars = { ENVIRONMENT = "development" }
 
 binding = "DB"
 database_name = "vibrate-data"
-database_id = "86a19b62-441d-46fd-a900-344b55c3a07b"
+database_id = "6dacb313-22e3-4b58-8df9-d50aa6e5b038"
 migrations_dir = "database/migrations"
