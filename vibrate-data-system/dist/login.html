@@ -36,18 +36,44 @@
             <div class="auth-footer">
                 <p>حساب کاربری ندارید؟ <a href="register.html">ثبت نام</a></p>
             </div>
+            
+            <!-- Debug info -->
+            <div id="debugInfo" style="margin-top: 1rem; padding: 1rem; background: #f0f0f0; border-radius: 4px; display: none;">
+                <small>Debug Information:</small>
+                <pre id="debugText"></pre>
+            </div>
         </div>
     </div>
 
     <script>
+        // Enable debug mode
+        const DEBUG = true;
+        
+        function logDebug(message, data = null) {
+            if (DEBUG) {
+                console.log(message, data);
+                const debugInfo = document.getElementById('debugInfo');
+                const debugText = document.getElementById('debugText');
+                debugInfo.style.display = 'block';
+                debugText.textContent += message + (data ? ' ' + JSON.stringify(data, null, 2) : '') + '\n';
+            }
+        }
+        
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const formData = new FormData(e.target);
-            const username = formData.get('username');
-            const password = formData.get('password');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال ورود...';
+            submitBtn.disabled = true;
             
             try {
+                const formData = new FormData(e.target);
+                const username = formData.get('username');
+                const password = formData.get('password');
+                
+                logDebug('Attempting login for:', username);
+                
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: {
@@ -56,16 +82,27 @@
                     body: JSON.stringify({ username, password })
                 });
                 
+                logDebug('Response status:', response.status);
+                logDebug('Response headers:', Object.fromEntries(response.headers.entries()));
+                
                 const data = await response.json();
+                logDebug('Response data:', data);
                 
                 if (response.ok) {
+                    logDebug('Login successful, redirecting...');
+                    alert('ورود موفقیت‌آمیز!');
                     window.location.href = '/';
                 } else {
+                    logDebug('Login failed:', data.error);
                     alert(data.error || 'خطا در ورود');
                 }
             } catch (error) {
+                logDebug('Login error:', error.message);
                 console.error('Login error:', error);
-                alert('خطا در ورود');
+                alert('خطا در ورود: ' + error.message);
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             }
         });
     </script>
