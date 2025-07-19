@@ -130,18 +130,14 @@ export async function onRequestPost(context) {
     }
 }
 
-// Simple password verification without bcrypt
 async function verifyPassword(password, hash) {
     try {
-        // If using bcrypt hash format
-        if (hash.startsWith('$2a$') || hash.startsWith('$2b$')) {
-            // For now, use simple comparison for admin
-            if (password === 'admin123' && hash.includes('LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8')) {
-                return true;
-            }
+        // Special case for admin
+        if (password === 'admin123' && hash === 'simple_admin123_hash') {
+            return true;
         }
         
-        // Simple hash verification  
+        // For other users, use simple hash
         const simpleHash = await hashPassword(password);
         return simpleHash === hash;
     } catch (error) {
